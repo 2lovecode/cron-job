@@ -1,5 +1,21 @@
 {
-    "require": {
-        "workerman/workerman": "^3.5"
+    "name" : "2lovecode/cron-job",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "liu hao",
+            "email": "liu546hao@163.com",
+            "role": "Developer"
+        }
+    ],
+    "require" : {
+        "php" : ">7.0",
+        "workerman/workerman" : "^3.5"
+    },
+    "require-dev" : {
+        "phpunit/phpunit" : "^6.2"
+    },
+    "autoload" : {
+        "psr-4" : { "CronJob\\" : "src/"}
     }
 }
