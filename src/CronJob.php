@@ -9,8 +9,8 @@
 namespace CronJob;
 
 use Workerman\Connection\AsyncTcpConnection;
-use \Workerman\Worker;
-use \Workerman\Lib\Timer;
+use Workerman\Worker;
+use Workerman\Lib\Timer;
 
 class CronJob {
     public static $host = "127.0.0.1";
@@ -29,6 +29,8 @@ class CronJob {
 
     public static function run ()
     {
+        require_once '../vendor/autoload.php';
+        
         $cronJobServer = new Worker("tcp://".CronJob::$host.":".CronJob::$port);
         $cronJobServer->protocol = CronJob::$protocolClass;
 
@@ -84,3 +86,5 @@ class CronJob {
         ];
     }
 }
+
+CronJob::run();
