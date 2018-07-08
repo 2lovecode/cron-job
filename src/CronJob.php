@@ -30,7 +30,7 @@ class CronJob {
     public static function run ()
     {
         require_once '../vendor/autoload.php';
-        
+
         $cronJobServer = new Worker("tcp://".CronJob::$host.":".CronJob::$port);
         $cronJobServer->protocol = CronJob::$protocolClass;
 
@@ -53,6 +53,7 @@ class CronJob {
                                 break;
                             }
                         }
+                        var_dump($nowTime);
                         if ($sendFlag) {
                             $trigger->send($taskName);
                         }
@@ -77,8 +78,8 @@ class CronJob {
         return [
             "task1" => [
                 ['01', '02', '03', '04', '05', '14', '15', '16', '29', '30', '31', '44', '45', '46', '56', '57', '58', '59'],
-                ['01', '02', '03', '04', '05', '14', '15', '16', '29', '30', '31', '44', '45', '46', '56', '57', '58', '59'],
-                ['0', '1', '2', '3'],
+                ['01', '02', '03', '04', '05', '14', '15', '16', '29', '30', '31', '44', '45', '46', '51', '52', '56', '57', '58', '59'],
+                ['0', '1', '2', '3', '12'],
                 ['1', '2', '3', '7', '8', '9'],
                 ['1', '2', '3', '7'],
                 ['0', '1', '2', '3', '4', '5', '6'],
