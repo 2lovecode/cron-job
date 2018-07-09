@@ -12,6 +12,11 @@
 ###### 使用示例
 ```
     1.使用composer安装
+    在composer.json文件中的require下添加：
+    "require" : {
+    		"2lovecode/cron-job": "dev-master"
+    }
+    执行composer install或composer update即可
     2.
     <?php
     require_once "../vendor/autoload.php";
