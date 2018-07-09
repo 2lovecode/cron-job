@@ -48,7 +48,7 @@ abstract class AbstractMode
             $outLog = CronJob::$outLog ?? '/dev/null';
             $errorLog = CronJob::$errorLog ?? '&1';
             $command = CronJob::$env.' '.$data.' >> '.$outLog.' 2>>'.$errorLog;
-            system($command);
+            system($command.' &');
         }
     }
 }
