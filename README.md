@@ -17,13 +17,32 @@
     		"2lovecode/cron-job": "dev-master"
     }
     执行composer install或composer update即可
-    2.
+    2.test.php
     <?php
     require_once "../vendor/autoload.php";
     
     $configDir = "";//指定配置文件路径,如果配置为空,默认使用default-config.php配置
     
     \CronJob\CronJob::run($configDir);//运行
+    
+    3.在cli模式下执行
+    php test.php start //debug模式运行
+    或
+    php test.php start -d //守护进程模式运行
+    
+    4.其它命令
+    php test.php stop //停止
+    php test.php stop -g
+    
+    php test.php reload
+    php test.php restart
+    
+    php test.php status
+    php test.php status -d
+    
+    php test.php connections
+    
+    可以通过php test.php查看命令帮助.
 ```
 
 ###### 配置文件参数
