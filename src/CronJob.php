@@ -8,84 +8,171 @@
 
 namespace CronJob;
 
-use Workerman\Connection\AsyncTcpConnection;
+use CronJob\Modes\AbstractMode;
 use Workerman\Worker;
-use Workerman\Lib\Timer;
 
 class CronJob {
+
+    /**
+     * @var string
+     */
+    protected static $configDir = "";
+
+    protected static $configMap = [];
+
+    protected static $mode = "both";
+
+    protected static $modeList = ['trigger', 'actuator', 'both'];
+
     public static $host = "127.0.0.1";
     public static $port = "8888";
     public static $processCount = 4;
     public static $protocolClass = "Workerman\\Protocols\\Text";
 
-    public static $dimensions = array(
-        array(0,59), //Seconds
-        array(0,59), //Minutes
-        array(0,23), //Hours
-        array(1,31), //Days
-        array(1,12), //Months
-        array(0,6),  //Weekdays
-    );
+    public static $cronList = [];
 
-    public static function run ()
+    public static function run ($configDir = "")
     {
-        require_once '../vendor/autoload.php';
+        try {
+            self::setConfigDir($configDir);
+            self::init();
+        } catch (\Exception $e) {
+            print_r($e->getMessage());
+            return;
+        }
 
-        $cronJobServer = new Worker("tcp://".CronJob::$host.":".CronJob::$port);
-        $cronJobServer->protocol = CronJob::$protocolClass;
-
-        $cronJobServer->count = CronJob::$processCount;
-
-        $cronJobServer->onWorkerStart = function($cronJobServer) {
-            if ($cronJobServer->id === 0) {
-                $trigger = new AsyncTcpConnection("tcp://".CronJob::$host.":".CronJob::$port);
-                $trigger->protocol = CronJob::$protocolClass;
-                $trigger->connect();
-                $cronJobConfig = CronJob::parseConfig();
-                $timeInterval = 1;
-                Timer::add($timeInterval, function () use ($trigger, $cronJobConfig) {
-                    $nowTime = explode(' ', date('s i G j n w', time()));
-                    foreach ($cronJobConfig as $taskName => $timePieces) {
-                        $sendFlag = true;
-                        foreach ($timePieces as $key => $item) {
-                            if (!in_array($nowTime[$key], $item)) {
-                                $sendFlag = false;
-                                break;
-                            }
-                        }
-                        var_dump($nowTime);
-                        if ($sendFlag) {
-                            $trigger->send($taskName);
-                        }
-                    }
-                });
-            }
-        };
-
-        $cronJobServer->onMessage = function ($connection, $data) {
-            if ((CronJob::$processCount === 1) || ($connection->worker->id !== 0)) {
-                echo $data."\n";
-            }
-        };
+        $mode = self::modeFactory();
+        $mode->config();
 
         // 运行worker
         Worker::runAll();
     }
 
-
-    public static function parseConfig()
+    protected static function setConfigDir($configDir = "")
     {
-        return [
-            "task1" => [
-                ['01', '02', '03', '04', '05', '14', '15', '16', '29', '30', '31', '44', '45', '46', '56', '57', '58', '59'],
-                ['01', '02', '03', '04', '05', '14', '15', '16', '29', '30', '31', '44', '45', '46', '51', '52', '56', '57', '58', '59'],
-                ['0', '1', '2', '3', '12'],
-                ['1', '2', '3', '7', '8', '9'],
-                ['1', '2', '3', '7'],
-                ['0', '1', '2', '3', '4', '5', '6'],
-            ],
-        ];
+        self::$configDir = __DIR__.'/default-config.php';
+
+        if (!empty($configDir) && file_exists($configDir)) {
+            self::$configDir = $configDir;
+        }
+    }
+
+    /**
+     * @throws CronJobException
+     */
+    protected static function init()
+    {
+        self::checkConfig();
+        self::resolveConfig();
+    }
+
+    /**
+     * @throws CronJobException
+     */
+    protected static function checkConfig()
+    {
+        $config = require(self::$configDir);
+        if (!is_array($config)) {
+            throw new CronJobException(self::t("配置文件返回值必须为数组"));
+        }
+        if (!isset($config['mode'])) {
+            throw new CronJobException(self::t("必须指定模式(mode)"));
+        }
+        $mode = $config['mode'];
+        if (!in_array($mode, self::$modeList)) {
+            throw new CronJobException(self::t("模式(mode)配置错误"));
+        }
+
+        if (!isset($config['port'])) {
+            throw new CronJobException(self::t("端口(port)未配置"));
+        }
+
+        switch ($mode) {
+            case 'trigger':
+                if (!isset($config['host'])) {
+                    throw new CronJobException(self::t('执行器host未配置'));
+                }
+                break;
+            case 'actuator':
+                if (!isset($config['processCount'])) {
+                    throw new CronJobException(self::t('processCount未配置'));
+                }
+                break;
+            case 'both':
+                if (!isset($config['processCount'])) {
+                    throw new CronJobException(self::t('processCount未配置'));
+                }
+                break;
+        }
+        if (!isset($config['cron'])) {
+            throw new CronJobException(self::t("定时任务(cron) 未配置"));
+        }
+
+        self::$configMap = $config;
+    }
+
+    protected static function resolveConfig()
+    {
+        $config = self::$configMap;
+        self::$mode = $config['mode'];
+        self::$host = $config['host'] ?? '127.0.0.1';
+        self::$port = $config['port'];
+        self::$processCount = $config['processCount'] ?? 4;
+        self::parseCron();
+    }
+
+    public static function parseCron()
+    {
+        $dimensions = array(
+            array(0,59), //Seconds
+            array(0,59), //Minutes
+            array(0,23), //Hours
+            array(1,31), //Days
+            array(1,12), //Months
+            array(0,6),  //Weekdays
+        );
+
+        foreach (self::$configMap['cron'] as $task => $config) {
+            foreach ($config as $key => $item) {
+                list($piece, $step) = explode('/', $item, 2) + array(false, 1);
+
+                if ($piece === '*') {
+                    $list = range($dimensions[$key][0], $dimensions[$key][1]);
+                    if ($step > 1) {
+                        foreach ($list as $k => &$v) {
+                            if ($v % $step !== 0) {
+                                unset($list[$k]);
+                            }
+                        }
+                    }
+                } else {
+                    $list = [];
+                    foreach (explode(',', $item) as $value) {
+                        $range = explode('-', $value);
+                        if (count($range) === 2) {
+                            $list = array_merge($list, range($range[0], $range[1]));
+                        } else {
+                            array_push($list, intval($range[0]));
+                        }
+                    }
+                }
+                self::$cronList[$task][$key] = $list;
+            }
+        }
+    }
+
+    public static function t($msg)
+    {
+        return $msg;
+    }
+
+    /**
+     * @return AbstractMode
+     */
+    protected static function modeFactory()
+    {
+        $modeClass = '\CronJob\Modes\\'.ucfirst(self::$mode);
+        $mode = new $modeClass();
+        return $mode;
     }
 }
-
-CronJob::run();
