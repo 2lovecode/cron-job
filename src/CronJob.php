@@ -29,6 +29,10 @@ class CronJob {
     public static $processCount = 4;
     public static $protocolClass = "Workerman\\Protocols\\Text";
 
+    public static $env = '';
+    public static $errorLog = '';
+    public static $outLog = '';
+
     public static $cronList = [];
 
     public static function run ($configDir = "")
@@ -118,6 +122,9 @@ class CronJob {
         self::$host = $config['host'] ?? '127.0.0.1';
         self::$port = $config['port'];
         self::$processCount = $config['processCount'] ?? 4;
+        self::$env = $config['execution-env'] ?? '';
+        self::$outLog = $config['stdout-log-file'] ?? '';
+        self::$errorLog = $config['stderr-log-file'] ?? '';
         self::parseCron();
     }
 

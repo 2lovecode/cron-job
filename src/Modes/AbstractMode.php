@@ -45,7 +45,10 @@ abstract class AbstractMode
     public function onMessage($connection, $data)
     {
         if ((CronJob::$processCount === 1) || ($connection->worker->id !== 0)) {
-            echo $data."\n";
+            $outLog = CronJob::$outLog ?? '/dev/null';
+            $errorLog = CronJob::$errorLog ?? '&1';
+            $command = CronJob::$env.' '.$data.' >> '.$outLog.' 2>>'.$errorLog;
+            system($command);
         }
     }
 }

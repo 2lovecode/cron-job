@@ -64,6 +64,14 @@
         //进程数配置,仅在actuator和both模式下有效
         'processCount' => 4,
     
+        //命令解释环境,为空则为shell命令
+        'execution-env' => '/usr/bin/php',
+        
+        //标准输出记录文件,为空则不计录
+        'stdout-log-file' => '/tmp/cron-job-out.log',
+        //错误输出记录文件,为空则不计录
+        'stderr-log-file' => '/tmp/cron-job-err.log',
+        
         //具体的定时任务配置,相对于linux的crontab,添加了秒级支持.
         'cron' => [
             'task1' => ['*', '*', '*', '*', '*', '*'],

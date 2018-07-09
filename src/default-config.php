@@ -22,8 +22,16 @@ return [
     //进程数配置,仅在actuator和both模式下有效
     'processCount' => 4,
 
+    //命令解释环境,为空则为shell命令
+    'execution-env' => '/usr/bin/php',
+
+    //标准输出记录文件,为空则不计录
+    'stdout-log-file' => '/tmp/cron-job-out.log',
+    //错误输出记录文件,为空则不计录
+    'stderr-log-file' => '/tmp/cron-job-err.log',
+
     'cron' => [
-        'task1' => ['*', '*', '*', '*', '*', '*'],
+        __DIR__.'/example/test.php' => ['*', '*', '*', '*', '*', '*'],
         'task2' => ['*/2', '*', '*', '*', '*', '*'],
         'task3' => ['1,2', '*', '*', '*', '*', '*'],
         'task4' => ['4-6,7-8', '*', '*', '*', '*', '*'],
