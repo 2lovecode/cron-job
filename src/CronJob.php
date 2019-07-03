@@ -54,7 +54,7 @@ class CronJob {
 
     protected static function setConfigDir($configDir = "")
     {
-        self::$configDir = __DIR__.'/default-config.php';
+        self::$configDir = __DIR__.'/default-config.json';
 
         if (!empty($configDir) && file_exists($configDir)) {
             self::$configDir = $configDir;
@@ -75,7 +75,7 @@ class CronJob {
      */
     protected static function checkConfig()
     {
-        $config = require(self::$configDir);
+        $config = self::readConfigFile(self::$configDir);
         if (!is_array($config)) {
             throw new CronJobException(self::t("配置文件返回值必须为数组"));
         }
@@ -125,18 +125,21 @@ class CronJob {
         self::$env = $config['execution-env'] ?? '';
         self::$outLog = $config['stdout-log-file'] ?? '';
         self::$errorLog = $config['stderr-log-file'] ?? '';
-        self::parseCron();
+        self::$cronList = self::parseCron(self::$configMap['cron']);
     }
 
     public static function reloadCron()
     {
-        $config = require(self::$configDir);
-        self::$configMap['cron'] = $config['cron'];
-        self::$cronList = [];
-        self::parseCron();
+        $config = self::readConfigFile(self::$configDir);
+        return self::parseCron($config['cron']);
     }
 
-    public static function parseCron()
+    public static function readConfigFile($path)
+    {
+        return json_decode(file_get_contents($path), true);
+    }
+
+    public static function parseCron($cronConfig)
     {
         $dimensions = array(
             array(0,59), //Seconds
@@ -147,7 +150,8 @@ class CronJob {
             array(0,6),  //Weekdays
         );
 
-        foreach (self::$configMap['cron'] as $task => $config) {
+        $tmp = [];
+        foreach ($cronConfig as $task => $config) {
             foreach ($config as $key => $item) {
                 list($piece, $step) = explode('/', $item, 2) + array(false, 1);
 
@@ -171,9 +175,11 @@ class CronJob {
                         }
                     }
                 }
-                self::$cronList[$task][$key] = $list;
+                $tmp[$task][$key] = $list;
             }
         }
+
+        return $tmp;
     }
 
     public static function t($msg)

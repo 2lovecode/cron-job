@@ -1,0 +1,25 @@
+{
+  /*
+    指定模式:有3种trigger,actuator,both
+    trigger,在当前服务器运行一个触发器
+    actuator,在当前服务器运行一个执行器
+    both,在当前服务器同时运行触发器和执行器
+  */
+  "mode" : "both",//required
+
+  "port": "8888",
+
+  "host": "127.0.0.1",
+
+  "processCount": 4,
+
+  "execution-env": "",
+
+  "stdout-log-file": "/tmp/cron-job-out.log",
+
+  "stderr-log-file": "/tmp/cron-job-err.log",
+
+  "cron": {
+    "echo \"test\"": ["*", "*", "*", "*", "*", "*"]
+  }
+}

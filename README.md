@@ -45,40 +45,54 @@
     可以通过php test.php查看命令帮助.
 ```
 
-###### 配置文件参数
+###### 配置文件参数 由php文件替换为json文件
 ```
-    <?php
-    return [
-        //指定模式:有3种trigger,actuator,both
-        //trigger,在当前服务器运行一个触发器
-        //actuator,在当前服务器运行一个执行器
-        //both,在当前服务器同时运行触发器和执行器
-        'mode' => 'both',//required
+    {
+      "mode" : "both",
     
-        //触发器监听的端口
-        'port' => '8888',//required
+      "port": "8888",
+     
+      "host": "127.0.0.1",
+      
+      "processCount": 4,
+      
+      "execution-env": "",
+      
+      "stdout-log-file": "/tmp/cron-job-out.log",
+      
+      "stderr-log-file": "/tmp/cron-job-err.log",
     
-        //执行器地址,仅在trigger和both模式下有效
-        'host' => '127.0.0.1',//执行器地址
+      "cron": {
+        "echo \"ccc\"": ["*", "*", "*", "*", "*", "*"]
+      }
+    }
     
-        //进程数配置,仅在actuator和both模式下有效
-        'processCount' => 4,
+    1.mode : required
+       - 指定模式:有3种trigger,actuator,both
+       - trigger,在当前服务器运行一个触发器
+       - actuator,在当前服务器运行一个执行器
+       - both,在当前服务器同时运行触发器和执行器
     
-        //命令解释环境,为空则为shell命令
-        'execution-env' => '/usr/bin/php',
+    
+    2.port : required
+        - 触发器监听的端口
         
-        //标准输出记录文件,为空则不计录
-        'stdout-log-file' => '/tmp/cron-job-out.log',
-        //错误输出记录文件,为空则不计录
-        'stderr-log-file' => '/tmp/cron-job-err.log',
+    3.host : 执行器地址
+        - 执行器地址,仅在trigger和both模式下有效
         
-        //具体的定时任务配置,相对于linux的crontab,添加了秒级支持.
-        'cron' => [
-            'task1' => ['*', '*', '*', '*', '*', '*'],
-            'task2' => ['*/2', '*', '*', '*', '*', '*'],
-            'task3' => ['1,2', '*', '*', '*', '*', '*'],
-            'task4' => ['4-6,7-8', '*', '*', '*', '*', '*'],
-        ],//required
-    
-    ];
+    4.processCount : 
+        - 进程数配置,仅在actuator和both模式下有效
+        
+    5.execution-env :
+        - 命令解释环境,为空则为shell命令
+        
+        
+    6.stdout-log-file :
+        - 标准输出记录文件,为空则不计录
+        
+    7.stderr-log-file :
+        - 错误输出记录文件,为空则不计录
+        
+    8.cron : required
+        - 具体的定时任务配置,相对于linux的crontab,添加了秒级支持.
 ```

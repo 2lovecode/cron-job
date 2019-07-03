@@ -19,6 +19,7 @@ class Both extends AbstractMode
         $cronJobServer = new Worker("tcp://".CronJob::$host.":".CronJob::$port);
         $cronJobServer->protocol = CronJob::$protocolClass;
         $cronJobServer->reloadable = false;
+        $cronJobServer->cronList = CronJob::$cronList;
 
         $cronJobServer->count = CronJob::$processCount;
 

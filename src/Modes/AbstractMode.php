@@ -24,9 +24,9 @@ abstract class AbstractMode
             $trigger->protocol = CronJob::$protocolClass;
             $trigger->connect();
             $timeInterval = 1;
-            Timer::add($timeInterval, function () use ($trigger) {
+            Timer::add($timeInterval, function ($cronJobServer, $trigger){
                 $nowTime = explode(' ', date('s i G j n w', time()));
-                foreach (CronJob::$cronList as $taskName => $timePieces) {
+                foreach ($cronJobServer->cronList as $taskName => $timePieces) {
                     $sendFlag = true;
                     foreach ($timePieces as $key => $item) {
                         if (!in_array(intval($nowTime[$key]), $item)) {
@@ -38,7 +38,7 @@ abstract class AbstractMode
                         $trigger->send($taskName);
                     }
                 }
-            });
+            }, array($cronJobServer, $trigger));
         }
     }
 
@@ -54,6 +54,8 @@ abstract class AbstractMode
 
     public function onWorkerReload($worker)
     {
-        CronJob::reloadCron();
+        $cronList = CronJob::reloadCron();
+//        var_dump(array_keys($cronList));
+        $worker->cronList = $cronList;
     }
 }
