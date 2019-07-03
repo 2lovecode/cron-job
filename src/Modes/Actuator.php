@@ -8,11 +8,18 @@
 
 namespace CronJob\Modes;
 
+use CronJob\CronJob;
+use Workerman\Worker;
 
 class Actuator extends AbstractMode
 {
     public function config()
     {
-        // TODO: Implement config() method.
+        $cronJobServer = new Worker("tcp://".CronJob::$host.":".CronJob::$port);
+        $cronJobServer->protocol = CronJob::$protocolClass;
+
+        $cronJobServer->count = CronJob::$processCount;
+
+        $cronJobServer->onMessage = array($this, 'onMessage');
     }
 }

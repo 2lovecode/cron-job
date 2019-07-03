@@ -51,4 +51,9 @@ abstract class AbstractMode
             system($command.' &');
         }
     }
+
+    public function onWorkerReload($worker)
+    {
+        CronJob::reloadCron();
+    }
 }

@@ -128,6 +128,14 @@ class CronJob {
         self::parseCron();
     }
 
+    public static function reloadCron()
+    {
+        $config = require(self::$configDir);
+        self::$configMap['cron'] = $config['cron'];
+        self::$cronList = [];
+        self::parseCron();
+    }
+
     public static function parseCron()
     {
         $dimensions = array(

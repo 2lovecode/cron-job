@@ -18,9 +18,11 @@ class Trigger extends AbstractMode
     {
         $cronJobServer = new Worker();
         $cronJobServer->protocol = CronJob::$protocolClass;
+        $cronJobServer->reloadable = false;
 
         $cronJobServer->count = 1;
 
         $cronJobServer->onWorkerStart = array($this, 'onWorkerStart');
+        $cronJobServer->onWorkerReload = array($this, 'onWorkerReload');
     }
 }
